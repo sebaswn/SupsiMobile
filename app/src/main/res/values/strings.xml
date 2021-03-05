@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">WeatherApp</string>
+    <string name="location_placeholder">No item name</string>
 </resources>
