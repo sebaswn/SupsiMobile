@@ -8,11 +8,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import org.json.JSONObject;
+import java.util.Objects;
 
 import ch.supsi.weatherapp.controllers.OpenWeather;
 import ch.supsi.weatherapp.controllers.UserLocationsHolder;
@@ -22,21 +21,25 @@ public class MainActivity extends AppCompatActivity {
 
     RecyclerView recyclerView;
     private FloatingActionButton newPlaceButton;
+    UserLocationsHolder locationsHolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        locationsHolder = UserLocationsHolder.getInstance(this);
+        locationsHolder.reloadCacheFromDB(new Runnable() {
+            @Override
+            public void run() {
+                reloadPlaces();
+            }
+        });
 
         Log.e("Status","getting info");
 
         new OpenWeather().execute("New York");
 
-        UserLocationsHolder.getInstance().getLocations().add(new Location("Lugano"));
-        UserLocationsHolder.getInstance().getLocations().add(new Location("New York"));
-        UserLocationsHolder.getInstance().getLocations().add(new Location("bellinzona"));
-
-        LocationAdapter adapter = new LocationAdapter(UserLocationsHolder.getInstance().getLocations());
+        final LocationAdapter adapter = new LocationAdapter(locationsHolder.getAllLocations());
 
         recyclerView = findViewById(R.id.locations_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -47,18 +50,23 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View view) {
-                UserLocationsHolder.getInstance().getLocations().add(new Location("New Place 1"));
-                reloadPlaces();
+                locationsHolder.insertLocation(
+                    new Location("New place #" + locationsHolder.getAllLocations().size()),
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            reloadPlaces();
+                        }
+                    });
             }
         });
 
     }
 
     private void reloadPlaces(){
-        LocationAdapter adapter = new LocationAdapter(UserLocationsHolder.getInstance().getLocations());
+        ((LocationAdapter)Objects.requireNonNull(recyclerView.getAdapter()))
+                .setLocations(locationsHolder.getAllLocations());
 
-        recyclerView = findViewById(R.id.locations_recycler_view);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);
+        Objects.requireNonNull(recyclerView.getAdapter()).notifyDataSetChanged();
     }
 }

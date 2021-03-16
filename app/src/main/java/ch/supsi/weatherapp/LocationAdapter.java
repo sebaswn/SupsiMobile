@@ -18,7 +18,14 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.Locati
 
     private List<Location> locations;
 
+    public LocationAdapter() {
+    }
+
     public LocationAdapter(List<Location> locations) {
+        this.locations = locations;
+    }
+
+    public void setLocations(List<Location> locations) {
         this.locations = locations;
     }
 

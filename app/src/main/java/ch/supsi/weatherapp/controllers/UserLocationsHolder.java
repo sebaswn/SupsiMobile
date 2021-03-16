@@ -1,46 +1,64 @@
 package ch.supsi.weatherapp.controllers;
 
-import android.util.Log;
-
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-
+import ch.supsi.weatherapp.database.LocationsDB;
 import ch.supsi.weatherapp.model.Location;
 
 public class UserLocationsHolder {
     private static UserLocationsHolder instance;
-    private List<Location> locations;
+    private List<Location> cachedLocations;
+    private final LocationsDB locationsDatabase;
 
-    public UserLocationsHolder() {
-        locations = new ArrayList<>();
+    public UserLocationsHolder(Context context) {
+        locationsDatabase = LocationsDB.getInstance(context);
+        cachedLocations = new ArrayList<>();
     }
 
-    public static UserLocationsHolder getInstance() {
-        if(instance == null) instance = new UserLocationsHolder();
+    public static UserLocationsHolder getInstance(Context context) {
+        if(instance == null) instance = new UserLocationsHolder(context);
         return instance;
     }
 
-    public Location findLocation(UUID id){
-        for (Location l :
-                locations) {
-            if (l.getId().equals(id)){
+    public void insertLocation(final Location location, final Runnable onLocationAdded){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                locationsDatabase.getLocationsDAO().addLocation(location);
+                cachedLocations.add(location);
+                new Handler(Looper.getMainLooper()).post(onLocationAdded);
+            }
+        }).start();
+    }
+
+    public void reloadCacheFromDB(final Runnable onReloadComplete){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                cachedLocations = locationsDatabase.getLocationsDAO().getAllLocations();
+                new Handler(Looper.getMainLooper()).post(onReloadComplete);
+            }
+        }).start();
+    }
+
+    public Location getLocation(final int id){
+        for(Location l: cachedLocations){
+            if(l.getId() == id){
                 return l;
-            };
+            }
         }
 
         return null;
     }
 
-    public int indexOf(UUID locationID){
-        for(int i=0;i<locations.size(); i++){
-            if(locationID.equals(locations.get(i).getId())) return i;
-        }
-
-        return -1;
+    public int indexOf(final Location location){
+        return cachedLocations.indexOf(location);
     }
 
-    public List<Location> getLocations() {
-        return locations;
+    public List<Location> getAllLocations(){
+        return cachedLocations;
     }
 }
