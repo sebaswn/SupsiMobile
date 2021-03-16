@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">WeatherApp</string>
-    <string name="location_placeholder">No item name</string>
+    <string name="location_name_placeholder">No Location Name</string>
+    <string name="degrees_placeholder">00 °C</string>
+    <string name="degrees_now_label">Current:</string>
+    <string name="degrees_min_label">Minimum:</string>
+    <string name="degrees_max_label">Maximum:</string>
+    <string name="add_button_desc">Button used to add a location</string>
+    <string name="location_weather_image_desc">Location weather image</string>
 </resources>
