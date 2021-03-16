@@ -6,11 +6,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import org.json.JSONObject;
+
+import ch.supsi.weatherapp.controllers.OpenWeather;
 import ch.supsi.weatherapp.controllers.UserLocationsHolder;
 import ch.supsi.weatherapp.model.Location;
 
@@ -24,11 +28,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Log.e("Status","getting info");
 
+        new OpenWeather().execute("New York");
 
-        UserLocationsHolder.getInstance().getLocations().add(new Location("Strunz 14"));
-        UserLocationsHolder.getInstance().getLocations().add(new Location("Strunz 2"));
-        UserLocationsHolder.getInstance().getLocations().add(new Location("Strunz 3"));
+        UserLocationsHolder.getInstance().getLocations().add(new Location("Lugano"));
+        UserLocationsHolder.getInstance().getLocations().add(new Location("New York"));
+        UserLocationsHolder.getInstance().getLocations().add(new Location("bellinzona"));
 
         LocationAdapter adapter = new LocationAdapter(UserLocationsHolder.getInstance().getLocations());
 
