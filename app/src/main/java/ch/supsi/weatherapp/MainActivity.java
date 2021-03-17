@@ -12,6 +12,9 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.util.Objects;
+
 import ch.supsi.weatherapp.controllers.OpenWeather;
 import ch.supsi.weatherapp.controllers.UserLocationsHolder;
 import ch.supsi.weatherapp.model.Location;
@@ -22,24 +25,32 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
 
     RecyclerView recyclerView;
     private FloatingActionButton newPlaceButton;
+    UserLocationsHolder locationsHolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        locationsHolder = UserLocationsHolder.getInstance(this);
 
-        Log.e("Status","getting info");
+        Log.e("Status", "getting info");
 
         new OpenWeather().execute("New York");
+        LocationAdapter adapter = new LocationAdapter(locationsHolder.getAllLocations());
 
-        UserLocationsHolder.getInstance().getLocations().add(new Location("Lugano"));
-        UserLocationsHolder.getInstance().getLocations().add(new Location("New York"));
-        UserLocationsHolder.getInstance().getLocations().add(new Location("Bellinzona"));
+        recyclerView = findViewById(R.id.locations_recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
 
-        loadPlacesList();
+        locationsHolder.reloadCacheFromDB(new Runnable() {
+            @Override
+            public void run() {
+                reloadPlaces();
+            }
+        });
 
         newPlaceButton = findViewById(R.id.newPlaceButton);
-        newPlaceButton.setOnClickListener(new View.OnClickListener(){
+        newPlaceButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
@@ -71,15 +82,18 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
 
     @Override
     public void onDialogResult(String result) {
-        UserLocationsHolder.getInstance().getLocations().add(new Location(result));
-        loadPlacesList();
+        UserLocationsHolder.getInstance(this).insertLocation(new Location(result), new Runnable() {
+            @Override
+            public void run() {
+                reloadPlaces();
+            }
+        });
     }
 
-    private void loadPlacesList(){
-        LocationAdapter adapter = new LocationAdapter(UserLocationsHolder.getInstance().getLocations());
+    private void reloadPlaces() {
+        ((LocationAdapter) Objects.requireNonNull(recyclerView.getAdapter()))
+                .setLocations(locationsHolder.getAllLocations());
 
-        recyclerView = findViewById(R.id.locations_recycler_view);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);
+        Objects.requireNonNull(recyclerView.getAdapter()).notifyDataSetChanged();
     }
 }

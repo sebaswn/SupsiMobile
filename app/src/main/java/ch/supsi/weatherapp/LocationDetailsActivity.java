@@ -3,22 +3,17 @@ package ch.supsi.weatherapp;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.PersistableBundle;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.util.Consumer;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 
-import java.util.List;
 import java.util.UUID;
 
 import ch.supsi.weatherapp.controllers.UserLocationsHolder;
@@ -28,7 +23,7 @@ public class LocationDetailsActivity extends AppCompatActivity {
 
     private ViewPager viewPager;
 
-    public static Intent newIntent(Context packageContext, UUID locationId) {
+    public static Intent newIntent(Context packageContext, int locationId) {
         Intent created = new Intent(packageContext, LocationDetailsActivity.class);
         created.putExtra("locationID", locationId);
         return created;
@@ -46,16 +41,27 @@ public class LocationDetailsActivity extends AppCompatActivity {
             @NonNull
             @Override
             public Fragment getItem(int position) {
-                return LocationDetailFragment.newInstance(UserLocationsHolder.getInstance().getLocations().get(position).getId());
+                return LocationDetailFragment.newInstance(UserLocationsHolder
+                        .getInstance(LocationDetailsActivity.this)
+                        .getAllLocations()
+                        .get(position)
+                        .getId());
             }
 
             @Override
             public int getCount() {
-                return UserLocationsHolder.getInstance().getLocations().size();
+                return UserLocationsHolder.getInstance(LocationDetailsActivity.this).getAllLocations().size();
             }
         });
 
-        UUID initLocationID = (UUID)getIntent().getExtras().get("locationID");
-        viewPager.setCurrentItem(UserLocationsHolder.getInstance().indexOf(initLocationID));
+        int initLocationID = (int) getIntent().getExtras().get("locationID");
+        Location initLocation =
+                UserLocationsHolder
+                .getInstance(LocationDetailsActivity.this)
+                .getLocation(initLocationID);
+
+        viewPager.setCurrentItem(UserLocationsHolder
+                .getInstance(LocationDetailsActivity.this)
+                .indexOf(initLocation));
     }
 }

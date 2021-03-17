@@ -21,7 +21,7 @@ public class LocationDetailFragment extends Fragment {
 
     private TextView locationName;
 
-    public static LocationDetailFragment newInstance(UUID locationID) {
+    public static LocationDetailFragment newInstance(int locationID) {
         Bundle args = new Bundle();
         args.putSerializable("locationID", locationID);
 
@@ -33,8 +33,8 @@ public class LocationDetailFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        UUID locationId = (UUID) getArguments().getSerializable("locationID");
-        location = UserLocationsHolder.getInstance().findLocation(locationId);
+        int locationId = (int) getArguments().getSerializable("locationID");
+        location = UserLocationsHolder.getInstance(this.getContext()).getLocation(locationId);
     }
 
     @Nullable
