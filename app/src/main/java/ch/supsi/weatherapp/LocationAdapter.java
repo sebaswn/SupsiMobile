@@ -12,7 +12,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+
 import ch.supsi.weatherapp.model.Location;
+
 
 public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.LocationsViewHolder> {
 

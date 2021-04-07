@@ -15,7 +15,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.Objects;
 
-import ch.supsi.weatherapp.controllers.OpenWeather;
 import ch.supsi.weatherapp.controllers.UserLocationsHolder;
 import ch.supsi.weatherapp.model.Location;
 import ch.supsi.weatherapp.model.OnDialogResultListener;
@@ -35,7 +34,6 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
 
         Log.e("Status", "getting info");
 
-        new OpenWeather().execute("New York");
         LocationAdapter adapter = new LocationAdapter(locationsHolder.getAllLocations());
 
         recyclerView = findViewById(R.id.locations_recycler_view);
@@ -96,4 +94,6 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
 
         Objects.requireNonNull(recyclerView.getAdapter()).notifyDataSetChanged();
     }
+
+
 }
