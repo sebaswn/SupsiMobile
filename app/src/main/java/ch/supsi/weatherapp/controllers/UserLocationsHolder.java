@@ -28,7 +28,7 @@ public class UserLocationsHolder {
             @Override
             public void run() {
                 locationsDatabase.getLocationsDAO().addLocation(location);
-                cachedLocations.add(location);
+                cachedLocations.add(locationsDatabase.getLocationsDAO().getLocation(location.getName()));
                 new Handler(Looper.getMainLooper()).post(onLocationAdded);
             }
         }).start();

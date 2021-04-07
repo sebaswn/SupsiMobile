@@ -95,7 +95,6 @@ public class LocationDetailFragment extends Fragment {
             @Override
             public void onFailure(Call<Post> call, Throwable t) {
                 Log.e("call failture", t.getMessage());
-
             }
         });
 
