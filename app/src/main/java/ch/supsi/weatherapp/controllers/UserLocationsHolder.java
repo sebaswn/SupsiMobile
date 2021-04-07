@@ -61,4 +61,13 @@ public class UserLocationsHolder {
     public List<Location> getAllLocations(){
         return cachedLocations;
     }
+
+    public boolean contains(String locationName){
+        for(Location loc : cachedLocations){
+            if(loc.getName().equals(locationName))
+                return true;
+        }
+
+        return false;
+    }
 }

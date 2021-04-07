@@ -2,17 +2,11 @@ package ch.supsi.weatherapp.controllers;
 import android.content.Context;
 import android.location.Location;
 import android.util.Log;
-
-
-import androidx.arch.core.util.Function;
 import androidx.core.util.Consumer;
-
 import io.nlopez.smartlocation.OnLocationUpdatedListener;
 import io.nlopez.smartlocation.SmartLocation;
 import io.nlopez.smartlocation.location.config.LocationAccuracy;
 import io.nlopez.smartlocation.location.config.LocationParams;
-
-import static android.content.ContentValues.TAG;
 
 public class SmartLocationController {
     private static SmartLocationController instance;

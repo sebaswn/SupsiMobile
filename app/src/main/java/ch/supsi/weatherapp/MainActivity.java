@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,12 +22,21 @@ import android.widget.EditText;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import ch.supsi.weatherapp.controllers.SmartLocationController;
 import ch.supsi.weatherapp.controllers.UserLocationsHolder;
+import ch.supsi.weatherapp.jsonAPI.Post;
 import ch.supsi.weatherapp.model.Location;
 import ch.supsi.weatherapp.model.OnDialogResultListener;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.content.ContentValues.TAG;
 
@@ -63,18 +74,11 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
 
             @Override
             public void onClick(View view) {
-                showDialogAndGetResult("Insert new city:", "", "San Francisco", MainActivity.this);
+                showDialogAndGetResult("Insert new city", "Location name:", "", MainActivity.this);
             }
         });
 
         initSmartLocation();
-
-        SmartLocationController.getInstance(this).requestLocation(new Consumer<android.location.Location>() {
-            @Override
-            public void accept(android.location.Location location) {
-                Log.i("FROM CLIENT", "Location : " + location.toString());
-            }
-        });
     }
 
     public void showDialogAndGetResult(final String title, final String message, final String initialText, final OnDialogResultListener listener) {
@@ -124,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
             }
         } else {
             Log.i(TAG, "Permission granted");
+            updateCurrentLocation();
         }
     }
 
@@ -134,5 +139,34 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
                 Log.i(TAG, "Permission granted");
             }
         }
+        updateCurrentLocation();
+    }
+
+    private void updateCurrentLocation(){
+        SmartLocationController.getInstance(this).requestLocation(new Consumer<android.location.Location>() {
+            @Override
+            public void accept(final android.location.Location location) {
+                // send a call to get weather for coordinates in location
+                // then take name and create a local location with that name if not already existing
+
+                Geocoder geocoder = new Geocoder(
+                        MainActivity.this, Locale.getDefault());
+                try {
+                    List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                    Location current = new Location(addresses.get(0).getLocality());
+
+                    if (!locationsHolder.contains(current.getName()))
+                        locationsHolder.insertLocation(current, new Runnable() {
+                            @Override
+                            public void run() {
+                                reloadPlaces();
+                            }
+                        });
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }

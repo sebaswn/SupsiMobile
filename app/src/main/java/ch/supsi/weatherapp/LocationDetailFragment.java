@@ -89,8 +89,6 @@ public class LocationDetailFragment extends Fragment {
                 degreesNow.setText( convertTemperature(post.getMain().getTemp()) + "°C");
                 degreesMin.setText( convertTemperature(post.getMain().getTempMin()) + "°C");
                 degreesMax.setText( convertTemperature(post.getMain().getTempMax()) + "°C");
-
-
             }
             @Override
             public void onFailure(Call<Post> call, Throwable t) {

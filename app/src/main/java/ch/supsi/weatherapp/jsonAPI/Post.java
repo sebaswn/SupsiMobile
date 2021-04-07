@@ -7,6 +7,10 @@ import java.util.List;
 
 public class Post {
 
+    @SerializedName("name")
+    @Expose
+    private String name = null;
+
     @SerializedName("weather")
     @Expose
     private List<Weather> weather = null;
@@ -30,4 +34,7 @@ public class Post {
         this.main = main;
     }
 
+    public String getName() {
+        return name;
+    }
 }
