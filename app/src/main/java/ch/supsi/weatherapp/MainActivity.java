@@ -3,19 +3,28 @@ package ch.supsi.weatherapp;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -26,23 +35,19 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import ch.supsi.weatherapp.controllers.SmartLocationController;
 import ch.supsi.weatherapp.controllers.UserLocationsHolder;
-import ch.supsi.weatherapp.jsonAPI.Post;
 import ch.supsi.weatherapp.model.Location;
 import ch.supsi.weatherapp.model.OnDialogResultListener;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.content.ContentValues.TAG;
 
 
 public class MainActivity extends AppCompatActivity implements OnDialogResultListener {
-    private static final int COARSE_LOCATION_REQ_CODE = 0x1;
+    public static final int LOCATION_REQ_CODE = 0x1;
+    public static final String CRIT_TEMP_CH_ID = "CritTempChannel";
 
     RecyclerView recyclerView;
     private FloatingActionButton newPlaceButton;
@@ -56,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
 
         Log.e("Status", "getting info");
 
-        LocationAdapter adapter = new LocationAdapter(locationsHolder.getAllLocations());
+        LocationAdapter adapter = new LocationAdapter(locationsHolder.getCurrentLocation(), locationsHolder.getAllLocations());
 
         recyclerView = findViewById(R.id.locations_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -78,7 +83,9 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
             }
         });
 
+        initNotificationChannel();
         initSmartLocation();
+        startCriticalTempMonitor();
     }
 
     public void showDialogAndGetResult(final String title, final String message, final String initialText, final OnDialogResultListener listener) {
@@ -114,6 +121,8 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
     private void reloadPlaces() {
         ((LocationAdapter) Objects.requireNonNull(recyclerView.getAdapter()))
                 .setLocations(locationsHolder.getAllLocations());
+        ((LocationAdapter) Objects.requireNonNull(recyclerView.getAdapter()))
+                .setCurrentLocation(locationsHolder.getCurrentLocation());
 
         Objects.requireNonNull(recyclerView.getAdapter()).notifyDataSetChanged();
     }
@@ -124,25 +133,26 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
             Log.i(TAG, "Permission not granted");
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, COARSE_LOCATION_REQ_CODE);
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQ_CODE);
             }
         } else {
             Log.i(TAG, "Permission granted");
-            updateCurrentLocation();
+            //updateCurrentLocation();
+            monitorCurrentLocation();
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        if (requestCode == COARSE_LOCATION_REQ_CODE) {
+        if (requestCode == LOCATION_REQ_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.i(TAG, "Permission granted");
+                monitorCurrentLocation();
             }
         }
-        updateCurrentLocation();
     }
 
-    private void updateCurrentLocation(){
+    private void updateCurrentLocation() {
         SmartLocationController.getInstance(this).requestLocation(new Consumer<android.location.Location>() {
             @Override
             public void accept(final android.location.Location location) {
@@ -168,5 +178,45 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
                 }
             }
         });
+    }
+
+    private void monitorCurrentLocation() {
+        SmartLocationController.getInstance(this).startMonitoring(new Consumer<android.location.Location>() {
+            @Override
+            public void accept(final android.location.Location location) {
+
+                Geocoder geocoder = new Geocoder(
+                        MainActivity.this, Locale.getDefault());
+                try {
+                    List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+
+                    Location current = locationsHolder.getCurrentLocation();
+                    current.setName(addresses.get(0).getLocality());
+                    reloadPlaces();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private void startCriticalTempMonitor() {
+        Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
+
+        PeriodicWorkRequest periodicRequest = new PeriodicWorkRequest.Builder(BackgroundWorker.class,
+                15, TimeUnit.MINUTES).setConstraints(constraints).build();
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork("POLL WORK",
+                ExistingPeriodicWorkPolicy.KEEP, periodicRequest);
+    }
+
+    private void initNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CRIT_TEMP_CH_ID, "Critical Temperatures", NotificationManager.IMPORTANCE_DEFAULT);
+            channel.setDescription("Send critical temperatures of your current zone as notifications");
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 }

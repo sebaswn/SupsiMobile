@@ -18,17 +18,20 @@ import ch.supsi.weatherapp.model.Location;
 
 public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.LocationsViewHolder> {
 
+    private Location currentLocation;
     private List<Location> locations;
 
-    public LocationAdapter() {
-    }
-
-    public LocationAdapter(List<Location> locations) {
+    public LocationAdapter(Location currentLocation, List<Location> locations) {
+        this.currentLocation = currentLocation;
         this.locations = locations;
     }
 
     public void setLocations(List<Location> locations) {
         this.locations = locations;
+    }
+
+    public void setCurrentLocation(Location currentLocation) {
+        this.currentLocation = currentLocation;
     }
 
     @NonNull
@@ -42,12 +45,17 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.Locati
 
     @Override
     public void onBindViewHolder(@NonNull LocationsViewHolder holder, int position) {
-        holder.bindTo(locations.get(position));
+        if(currentLocation.getName().isEmpty())
+            holder.bindTo(locations.get(position));
+        else if(position == 0)
+            holder.bindTo(currentLocation);
+        else
+            holder.bindTo(locations.get(position-1));
     }
 
     @Override
     public int getItemCount() {
-        return locations.size();
+        return locations.size() + (currentLocation.getName().isEmpty() ? 0 : 1);
     }
 
     public static class LocationsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -71,7 +79,7 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.Locati
             Log.i("INFO", "opening new view with: " + location.getName());
             itemView.getContext().startActivity(LocationDetailsActivity.newIntent(
                     itemView.getContext(),
-                    location.getId()));
+                    location));
         }
     }
 }

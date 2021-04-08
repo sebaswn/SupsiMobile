@@ -25,6 +25,16 @@ public class SmartLocationController {
         return instance;
     }
 
+    public void startMonitoring(final Consumer<Location> onResult){
+        SmartLocation.with(context).location().continuous().config(params)
+                .start(new OnLocationUpdatedListener() {
+                    @Override
+                    public void onLocationUpdated(Location location) {
+                        onResult.accept(location);
+                    }
+                });
+    }
+
     public void requestLocation(final Consumer<Location> onLocationResult){
         SmartLocation.with(context).location().oneFix().config(params).start(new OnLocationUpdatedListener() {
             @Override
@@ -33,5 +43,9 @@ public class SmartLocationController {
                 onLocationResult.accept(location);
             }
         });
+    }
+
+    public Location getLastLocation(){
+        return SmartLocation.with(context).location().getLastLocation();
     }
 }

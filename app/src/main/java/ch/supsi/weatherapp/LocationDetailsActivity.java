@@ -21,11 +21,9 @@ import ch.supsi.weatherapp.model.Location;
 
 public class LocationDetailsActivity extends AppCompatActivity {
 
-    private ViewPager viewPager;
-
-    public static Intent newIntent(Context packageContext, int locationId) {
+    public static Intent newIntent(Context packageContext, Location location) {
         Intent created = new Intent(packageContext, LocationDetailsActivity.class);
-        created.putExtra("locationID", locationId);
+        created.putExtra("location", location);
         return created;
     }
 
@@ -34,7 +32,7 @@ public class LocationDetailsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location_details);
 
-        viewPager = findViewById(R.id.viewpager);
+        ViewPager viewPager = findViewById(R.id.viewpager);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         viewPager.setAdapter(new FragmentStatePagerAdapter(fragmentManager) {
@@ -43,22 +41,16 @@ public class LocationDetailsActivity extends AppCompatActivity {
             public Fragment getItem(int position) {
                 return LocationDetailFragment.newInstance(UserLocationsHolder
                         .getInstance(LocationDetailsActivity.this)
-                        .getAllLocations()
-                        .get(position)
-                        .getId());
+                        .forIndex(position));
             }
 
             @Override
             public int getCount() {
-                return UserLocationsHolder.getInstance(LocationDetailsActivity.this).getAllLocations().size();
+                return UserLocationsHolder.getInstance(LocationDetailsActivity.this).getLocationsCount();
             }
         });
 
-        int initLocationID = (int) getIntent().getExtras().get("locationID");
-        Location initLocation =
-                UserLocationsHolder
-                .getInstance(LocationDetailsActivity.this)
-                .getLocation(initLocationID);
+        Location initLocation = (Location) getIntent().getExtras().get("location");
 
         viewPager.setCurrentItem(UserLocationsHolder
                 .getInstance(LocationDetailsActivity.this)
