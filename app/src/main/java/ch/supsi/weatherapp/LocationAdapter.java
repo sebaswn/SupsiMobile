@@ -45,11 +45,11 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.Locati
     @Override
     public void onBindViewHolder(@NonNull LocationsViewHolder holder, int position) {
         if(currentLocation.getName().isEmpty())
-            holder.bindTo(locations.get(position));
+            holder.bindTo(locations.get(position),false);
         else if(position == 0)
-            holder.bindTo(currentLocation);
+            holder.bindTo(currentLocation, true);
         else
-            holder.bindTo(locations.get(position-1));
+            holder.bindTo(locations.get(position-1),false);
     }
 
     @Override
@@ -68,9 +68,13 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.Locati
             text = itemView.findViewById(R.id.list_item_text);
         }
 
-        public void bindTo(Location l){
+        public void bindTo(Location l, boolean cl){
             location = l;
-            text.setText(l.getName());
+            if(cl)
+                text.setText("Current Location: " + l.getName());
+            else
+                text.setText(l.getName());
+
         }
 
         @Override
