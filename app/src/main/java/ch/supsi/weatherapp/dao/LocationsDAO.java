@@ -7,7 +7,6 @@ import androidx.room.Query;
 import androidx.room.Update;
 
 import java.util.List;
-import java.util.UUID;
 
 import ch.supsi.weatherapp.model.Location;
 

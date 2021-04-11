@@ -38,6 +38,37 @@ public abstract class WeatherFetcher {
             @Override
             public void onFailure(Call<Post> call, Throwable t) {
                 Log.e("call failture", t.getMessage());
+
+            }
+        });
+    }
+
+    public static void checkCity(final String locationName, final Consumer<String> onResult, final Consumer<Response<Post>> onFailture){
+        Retrofit retrofit = null;
+        retrofit = new Retrofit.Builder()
+                .baseUrl("https://api.openweathermap.org/data/2.5/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        OpenWeatherAPI openWeatherHolderApi = retrofit.create(OpenWeatherAPI.class);
+        Call<Post> call = null;
+        String city = locationName.replace(" ", "+");
+        call = openWeatherHolderApi.getPost( city, "bda36c03a06ee5e92467b7ccb9ecbacc");
+        call.enqueue(new Callback<Post>() {
+            @Override
+            public void onResponse(Call<Post> call, Response<Post> response) {
+                if (!response.isSuccessful()) {
+                    onFailture.accept(response);
+                    Log.e("response unsuccessful", String.valueOf(response.raw()));
+                    return;
+                }else {
+                    Post post = response.body();
+                    onResult.accept(locationName);
+                }
+            }
+            @Override
+            public void onFailure(Call<Post> call, Throwable t) {
+                Log.e("call failture", t.getMessage());
             }
         });
     }

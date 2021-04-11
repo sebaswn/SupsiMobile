@@ -3,7 +3,6 @@ package ch.supsi.weatherapp;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -17,17 +16,16 @@ import androidx.work.WorkManager;
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -39,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 import ch.supsi.weatherapp.controllers.SmartLocationController;
 import ch.supsi.weatherapp.controllers.UserLocationsHolder;
+import ch.supsi.weatherapp.controllers.WeatherFetcher;
 import ch.supsi.weatherapp.model.Location;
 import ch.supsi.weatherapp.model.OnDialogResultListener;
 
@@ -50,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
     public static final String CRIT_TEMP_CH_ID = "CritTempChannel";
 
     RecyclerView recyclerView;
+    WeatherFetcher weatherFetcher;
+
     private FloatingActionButton newPlaceButton;
     UserLocationsHolder locationsHolder;
 
@@ -110,12 +111,21 @@ public class MainActivity extends AppCompatActivity implements OnDialogResultLis
 
     @Override
     public void onDialogResult(String result) {
-        UserLocationsHolder.getInstance(this).insertLocation(new Location(result), new Runnable() {
-            @Override
-            public void run() {
-                reloadPlaces();
-            }
+        //String cityName;
+
+        weatherFetcher.checkCity(result, (cityName) -> {
+            UserLocationsHolder.getInstance(this).insertLocation(new Location(cityName), new Runnable() {
+                @Override
+                public void run() {
+                    reloadPlaces();
+                }
+            });
+        }, (response) -> {
+            Toast.makeText(getApplicationContext(), result + " could not be found", 15).show();
+            Log.e("response unsuccessful", String.valueOf(response.raw()));
         });
+
+
     }
 
     private void reloadPlaces() {

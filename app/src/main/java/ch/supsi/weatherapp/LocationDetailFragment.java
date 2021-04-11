@@ -3,7 +3,6 @@ package ch.supsi.weatherapp;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,18 +15,12 @@ import androidx.core.util.Consumer;
 import androidx.fragment.app.Fragment;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 
-import ch.supsi.weatherapp.controllers.UserLocationsHolder;
 import ch.supsi.weatherapp.controllers.WeatherFetcher;
 import ch.supsi.weatherapp.jsonAPI.Post;
 import ch.supsi.weatherapp.model.Location;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+
 
 public class LocationDetailFragment extends Fragment {
 
@@ -93,7 +86,6 @@ public class LocationDetailFragment extends Fragment {
                                 URL thumb_u = new URL("https://openweathermap.org/img/wn/" +
                                         post.getWeather().get(0).getIcon() +
                                         "@2x.png");
-
 
                                 final Drawable thumb_d = Drawable.createFromStream(thumb_u.openStream(), "src");
 
